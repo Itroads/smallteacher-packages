@@ -39,7 +39,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Generate OTP
+        id: generate-otp
+        run: |
+          node -e "require('otplib').authenticator.generate('${{ secrets.NPM_2FA_SECRET }}')"
+        shell: bash
+        env:
+          NPM_2FA_SECRET: ${{ secrets.NPM_2FA_SECRET }}
+
       - name: Run publish script
         run: node scripts/publish-packages.js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_OTP: ${{ steps.generate-otp.outputs.otp }}
