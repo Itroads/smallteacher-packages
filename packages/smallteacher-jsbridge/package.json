@@ -1,5 +1,5 @@
 {
-  "name": "@smallteacher/jsbridge",
+  "name": "smallteacher-jsbridge",
   "version": "1.0.0-alpha.2",
   "description": "",
   "type": "module",
