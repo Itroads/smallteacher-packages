@@ -23,6 +23,10 @@ jobs:
           fi
           echo "Tag $tag is valid."
 
+      - name: Switch to main branch
+        run: |
+          git checkout main || git checkout master
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:

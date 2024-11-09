@@ -73,9 +73,12 @@ function publishPackages() {
     console.log(
       `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
     );
-    execSync(`cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag}`, {
-      stdio: 'inherit',
-    });
+    execSync(
+      `cd ${packagesDir}/${packageDir} && npm run build && pnpm publish --tag ${tag}`,
+      {
+        stdio: 'inherit',
+      }
+    );
   }
 }
 
