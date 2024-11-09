@@ -62,7 +62,7 @@ function publishPackages() {
       `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
     );
     execSync(
-      `cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag} --access public`,
+      `cd ${packagesDir}/${packageDir} && npm run build && pnpm publish --tag ${tag} --access public`,
       { stdio: 'inherit' }
     );
   }
