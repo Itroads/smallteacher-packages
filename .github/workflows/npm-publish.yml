@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Fetch all history for tag comparison
+          fetch-depth: 0 # Fetch all history for tag comparison
 
       - name: Validate tag format
         run: |
@@ -26,11 +26,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Use the desired Node.js version
+          node-version: '20.15.0' # Use the desired Node.js version
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: npm install -g pnpm@9.5.0
 
       - name: Install dependencies
         run: pnpm install
