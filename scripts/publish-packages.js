@@ -5,33 +5,61 @@ const path = require('path');
 const childProcess = require('child_process');
 const { execSync } = childProcess;
 
-function getChangedPackages() {
-  const changedFiles = execSync('git diff --name-only HEAD~1 HEAD', {
-    encoding: 'utf-8',
-  });
-  return changedFiles
-    .split('\n')
-    .filter(
-      (file) => file.startsWith('packages/') && file.endsWith('package.json')
-    );
-}
-
 function getPackageVersion(packageJsonPath) {
   const content = fs.readFileSync(packageJsonPath, 'utf-8');
   const packageJson = JSON.parse(content);
   return packageJson.version;
 }
 
-function checkVersionChanges(changedPackages) {
-  const versionChanges = [];
-  for (const packageJsonPath of changedPackages) {
-    const oldVersion = getPackageVersion(`HEAD~1:${packageJsonPath}`);
-    const newVersion = getPackageVersion(packageJsonPath);
-    if (oldVersion !== newVersion) {
-      versionChanges.push(packageJsonPath);
+function getPackageName(packageJsonPath) {
+  const content = fs.readFileSync(packageJsonPath, 'utf-8');
+  const packageJson = JSON.parse(content);
+  return packageJson.name;
+}
+
+function checkVersionExistsOnNpm(packageName, version) {
+  try {
+    const result = execSync(`npm view ${packageName}@${version} version`, {
+      encoding: 'utf-8',
+    }).trim();
+    return result === version;
+  } catch (error) {
+    // If the command fails, it means the version does not exist
+    return false;
+  }
+}
+
+function publishPackages() {
+  const packagesDir = 'packages';
+  const packageDirs = fs
+    .readdirSync(packagesDir)
+    .filter((dir) => fs.statSync(`${packagesDir}/${dir}`).isDirectory());
+
+  for (const packageDir of packageDirs) {
+    const packageJsonPath = `${packagesDir}/${packageDir}/package.json`;
+    if (!fs.existsSync(packageJsonPath)) {
+      console.log(`Skipping ${packageDir} as package.json does not exist.`);
+      continue;
+    }
+
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+    const version = packageJson.version;
+    const packageName = packageJson.name;
+    const tag = getTagFromVersion(version);
+
+    if (checkVersionExistsOnNpm(packageName, version)) {
+      console.log(
+        `Version ${version} of package ${packageName} already exists on npm. Skipping.`
+      );
+    } else {
+      console.log(
+        `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
+      );
+      execSync(`cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag}`, {
+        stdio: 'inherit',
+      });
     }
   }
-  return versionChanges;
 }
 
 function getTagFromVersion(version) {
@@ -42,34 +70,8 @@ function getTagFromVersion(version) {
   return 'latest';
 }
 
-function publishPackages(versionChanges) {
-  for (const packageJsonPath of versionChanges) {
-    const packageDir = path.dirname(packageJsonPath);
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    const version = packageJson.version;
-    const tag = getTagFromVersion(version);
-
-    console.log(`Publishing package in ${packageDir} with tag ${tag}`);
-    execSync(`cd ${packageDir} && npm publish --tag ${tag}`, {
-      stdio: 'inherit',
-    });
-  }
-}
-
 function main() {
-  const changedPackages = getChangedPackages();
-  if (changedPackages.length === 0) {
-    console.log('No package.json files changed.');
-    return;
-  }
-
-  const versionChanges = checkVersionChanges(changedPackages);
-  if (versionChanges.length === 0) {
-    console.log('No version changes detected.');
-    return;
-  }
-
-  publishPackages(versionChanges);
+  publishPackages();
 }
 
 main();
