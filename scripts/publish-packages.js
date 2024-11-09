@@ -39,7 +39,7 @@ function checkPackageExistsOnNpm(packageName) {
   }
 }
 
-function publishPackages() {
+function publishPackages(otp, authToken) {
   const packagesDir = 'packages';
   const packageDirs = fs
     .readdirSync(packagesDir)
@@ -74,10 +74,8 @@ function publishPackages() {
       `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
     );
     execSync(
-      `cd ${packagesDir}/${packageDir} && npm run build && pnpm publish --tag ${tag}`,
-      {
-        stdio: 'inherit',
-      }
+      `cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag} --otp=${otp} --access public`,
+      { stdio: 'inherit', env: { ...process.env, NODE_AUTH_TOKEN: authToken } }
     );
   }
 }
@@ -91,7 +89,20 @@ function getTagFromVersion(version) {
 }
 
 function main() {
-  publishPackages();
+  const otp = process.env.NPM_OTP;
+  const authToken = process.env.NODE_AUTH_TOKEN;
+
+  if (!otp) {
+    console.error('NPM_OTP environment variable is not set.');
+    process.exit(1);
+  }
+
+  if (!authToken) {
+    console.error('NODE_AUTH_TOKEN environment variable is not set.');
+    process.exit(1);
+  }
+
+  publishPackages(otp, authToken);
 }
 
 main();
