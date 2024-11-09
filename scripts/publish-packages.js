@@ -29,6 +29,16 @@ function checkVersionExistsOnNpm(packageName, version) {
   }
 }
 
+function checkPackageExistsOnNpm(packageName) {
+  try {
+    execSync(`npm view ${packageName} name`, { encoding: 'utf-8' });
+    return true;
+  } catch (error) {
+    // If the command fails, it means the package does not exist
+    return false;
+  }
+}
+
 function publishPackages() {
   const packagesDir = 'packages';
   const packageDirs = fs
@@ -47,18 +57,25 @@ function publishPackages() {
     const packageName = packageJson.name;
     const tag = getTagFromVersion(version);
 
-    if (checkVersionExistsOnNpm(packageName, version)) {
-      console.log(
-        `Version ${version} of package ${packageName} already exists on npm. Skipping.`
-      );
+    if (checkPackageExistsOnNpm(packageName)) {
+      if (checkVersionExistsOnNpm(packageName, version)) {
+        console.log(
+          `Version ${version} of package ${packageName} already exists on npm. Skipping.`
+        );
+        continue;
+      }
     } else {
       console.log(
-        `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
+        `Package ${packageName} does not exist on npm. Publishing as a new package.`
       );
-      execSync(`cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag}`, {
-        stdio: 'inherit',
-      });
     }
+
+    console.log(
+      `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
+    );
+    execSync(`cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag}`, {
+      stdio: 'inherit',
+    });
   }
 }
 
