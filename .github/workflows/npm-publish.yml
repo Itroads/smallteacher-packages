@@ -42,7 +42,8 @@ jobs:
       - name: Generate OTP
         id: generate-otp
         run: |
-          node -e "require('otplib').authenticator.generate('${{ secrets.NPM_2FA_SECRET }}')"
+          otp=$(node -e "require('otplib').authenticator.generate('${{ secrets.NPM_2FA_SECRET }}')")
+          echo "otp=$otp" >> $GITHUB_ENV
         shell: bash
         env:
           NPM_2FA_SECRET: ${{ secrets.NPM_2FA_SECRET }}
@@ -51,4 +52,4 @@ jobs:
         run: node scripts/publish-packages.js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_OTP: ${{ steps.generate-otp.outputs.otp }}
+          NPM_OTP: ${{ env.otp }}
