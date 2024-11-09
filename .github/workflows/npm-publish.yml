@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all history for tag comparison
 
@@ -28,10 +28,12 @@ jobs:
           git checkout main || git checkout master
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20.15.0' # Use the desired Node.js version
           registry-url: 'https://registry.npmjs.org'
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install pnpm
         run: npm install -g pnpm@9.5.0
@@ -39,17 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Generate OTP
-        id: generate-otp
-        run: |
-          otp=$(node -e "require('otplib').authenticator.generate('${{ secrets.NPM_2FA_SECRET }}')")
-          echo "otp=$otp" >> $GITHUB_ENV
-        shell: bash
-        env:
-          NPM_2FA_SECRET: ${{ secrets.NPM_2FA_SECRET }}
-
       - name: Run publish script
         run: node scripts/publish-packages.js
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_OTP: ${{ env.otp }}

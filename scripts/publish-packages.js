@@ -5,18 +5,6 @@ const path = require('path');
 const childProcess = require('child_process');
 const { execSync } = childProcess;
 
-function getPackageVersion(packageJsonPath) {
-  const content = fs.readFileSync(packageJsonPath, 'utf-8');
-  const packageJson = JSON.parse(content);
-  return packageJson.version;
-}
-
-function getPackageName(packageJsonPath) {
-  const content = fs.readFileSync(packageJsonPath, 'utf-8');
-  const packageJson = JSON.parse(content);
-  return packageJson.name;
-}
-
 function checkVersionExistsOnNpm(packageName, version) {
   try {
     const result = execSync(`npm view ${packageName}@${version} version`, {
@@ -39,7 +27,7 @@ function checkPackageExistsOnNpm(packageName) {
   }
 }
 
-function publishPackages(otp, authToken) {
+function publishPackages() {
   const packagesDir = 'packages';
   const packageDirs = fs
     .readdirSync(packagesDir)
@@ -74,8 +62,8 @@ function publishPackages(otp, authToken) {
       `Publishing package ${packageName} in ${packageDir} with tag ${tag}`
     );
     execSync(
-      `cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag} --otp=${otp} --access public`,
-      { stdio: 'inherit', env: { ...process.env, NODE_AUTH_TOKEN: authToken } }
+      `cd ${packagesDir}/${packageDir} && pnpm publish --tag ${tag} --access public`,
+      { stdio: 'inherit' }
     );
   }
 }
@@ -89,20 +77,7 @@ function getTagFromVersion(version) {
 }
 
 function main() {
-  const otp = process.env.NPM_OTP;
-  const authToken = process.env.NODE_AUTH_TOKEN;
-
-  if (!otp) {
-    console.error('NPM_OTP environment variable is not set.');
-    process.exit(1);
-  }
-
-  if (!authToken) {
-    console.error('NODE_AUTH_TOKEN environment variable is not set.');
-    process.exit(1);
-  }
-
-  publishPackages(otp, authToken);
+  publishPackages();
 }
 
 main();
