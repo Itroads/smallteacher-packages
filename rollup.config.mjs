@@ -36,7 +36,7 @@ export default {
     postcss({
       plugins: [],
       minimize: true, // 生产环境下压缩 CSS
-      extract: '[name].[hash].css', // 抽取 CSS 到单独的文件
+      extract: true, // 抽取 CSS 到单独的文件
       extensions: ['.css'], // 支持的文件扩展名
     }), // 处理 CSS 文件
   ],
